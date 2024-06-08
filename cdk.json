@@ -1,6 +1,5 @@
 {
   "app": "node cdk/main.js",
-  "profile": "development",
   "watch": {
     "include": [
       "**"
