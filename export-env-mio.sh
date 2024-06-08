@@ -19,9 +19,9 @@ STACK_NAME=$1
 REGION=$2
 PROFILE=$3
 
-if [ -z "$STACK_NAME" ] || [ -z "$REGION" ]
+if [ -z "$STACK_NAME" ] || [ -z "$REGION" ] || [ -z "$PROFILE" ]
 then
-    echo "Usage: $0 <STACK_NAME> <REGION>"
+    echo "Usage: $0 <STACK_NAME> <REGION> <PROFILE>"
     exit 1
 fi
 
@@ -31,10 +31,10 @@ echo "Running..."
 > .env
 
 # Iterate through Lambda functions created by CloudFormation stack
-for LAMBDA_ARN in $(aws cloudformation describe-stack-resources --stack-name "$STACK_NAME" --region "$REGION" | jq -r '.StackResources[] | select(.ResourceType=="AWS::Lambda::Function") .PhysicalResourceId')
+for LAMBDA_ARN in $(aws cloudformation describe-stack-resources --stack-name "$STACK_NAME" --region "$REGION" --profile "$PROFILE" | jq -r '.StackResources[] | select(.ResourceType=="AWS::Lambda::Function") .PhysicalResourceId')
 do
     # Fetch function configuration
-    FUNCTION_CONFIG=$(aws lambda get-function-configuration --function-name "$LAMBDA_ARN" --region "$REGION")
+    FUNCTION_CONFIG=$(aws lambda get-function-configuration --function-name "$LAMBDA_ARN" --region "$REGION" --profile "$PROFILE")
 
     # Extract environment variables
     ENV_VARS=$(echo $FUNCTION_CONFIG | jq -r '.Environment.Variables')
@@ -52,9 +52,9 @@ do
 done
 
 # Iterate through the outputs of the CloudFormation stack
-for OUTPUT_KEY in $(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region "$REGION" | jq -r '.Stacks[0].Outputs[].OutputKey')
+for OUTPUT_KEY in $(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region "$REGION" --profile "$PROFILE" | jq -r '.Stacks[0].Outputs[].OutputKey')
 do
-    OUTPUT_VALUE=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region "$REGION" | jq -r --arg OUTPUT_KEY "$OUTPUT_KEY" '.Stacks[0].Outputs[] | select(.OutputKey==$OUTPUT_KEY) .OutputValue')
+    OUTPUT_VALUE=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region "$REGION" --profile "$PROFILE" | jq -r --arg OUTPUT_KEY "$OUTPUT_KEY" '.Stacks[0].Outputs[] | select(.OutputKey==$OUTPUT_KEY) .OutputValue')
     
     # Check if the key already exists in the .env file
     if ! grep -q "^$OUTPUT_KEY=" .env; then
@@ -63,3 +63,5 @@ do
 done
 
 echo ".env file has been created/updated with environment variables from Lambda functions."
+
+eval "$(aws configure export-credentials --profile "$PROFILE" --format env)"
