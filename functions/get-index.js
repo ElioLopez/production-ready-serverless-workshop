@@ -30,7 +30,6 @@ const getRestaurants = async () => {
 }
 
 module.exports.handler = async (event, context) => {
-  // Use the template variable directly
   const restaurants = await getRestaurants()
   console.log(`found ${restaurants.length} restaurants`)  
   const dayOfWeek = days[new Date().getDay()]
@@ -42,14 +41,14 @@ module.exports.handler = async (event, context) => {
     restaurants,
     searchUrl: `${restaurantsApiRoot}/search`
   }
-  const html = Mustache.render(template, view )
+  const html = Mustache.render(template, view)
   const response = {
     statusCode: 200,
     headers: {
-      'Content-Type': 'text/html; charset=UTF-8'
+      'content-type': 'text/html; charset=UTF-8'
     },
     body: html
   }
 
-  return response;
-};
+  return response
+}
