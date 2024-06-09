@@ -40,7 +40,7 @@ jobs:
         run: cdk deploy --all --require-approval never
 
       - name: export env
-        run: ./export-env.sh ApiStack-dev us-east-1
+        run: ./export-env.sh ApiStack-dev eu-central-1
 
       - name: run integration test
         run: npm run test
